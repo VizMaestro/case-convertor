@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Text Case Editor</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .tabs {
+      display: flex;
+      background: #4D4DFF;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      color: white;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: white;
+      color: #4D4DFF;
+      font-weight: bold;
+    }
+    .content {
+      padding: 16px;
+    }
+    .card {
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      padding: 12px;
+      margin: 10px 0;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .card.active {
+      border-color: #4D4DFF;
+      box-shadow: 0 0 0 2px #4D4DFF inset;
+    }
+    .bulk-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+    select, button {
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #4D4DFF;
+      color: white;
+      border: none;
+      margin-top: 16px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <div id="tab-point" class="tab active">Point & edit</div>
+    <div id="tab-bulk" class="tab">Bulk edit</div>
+  </div>
+
+  <div class="content" id="point-edit">
+    <p id="select-text-msg">Select a text</p>
+    <div id="preview-cards" style="display:none;"></div>
+  </div>
+
+  <div class="content" id="bulk-edit" style="display:none;">
+    <div id="bulk-list"></div>
+    <button id="bulk-confirm">Confirm</button>
+  </div>
+
+  <script>
+    const pointTab = document.getElementById("tab-point");
+    const bulkTab = document.getElementById("tab-bulk");
+    const pointContent = document.getElementById("point-edit");
+    const bulkContent = document.getElementById("bulk-edit");
+
+    pointTab.onclick = () => switchTab(true);
+    bulkTab.onclick = () => switchTab(false);
+
+    function switchTab(isPoint) {
+      pointTab.classList.toggle("active", isPoint);
+      bulkTab.classList.toggle("active", !isPoint);
+      pointContent.style.display = isPoint ? "block" : "none";
+      bulkContent.style.display = !isPoint ? "block" : "none";
+      if (!isPoint) {
+        parent.postMessage({ pluginMessage: { type: "bulk-get-cases" } }, "*");
+      }
+    }
+
+    function toTitleCase(text) {
+      return text.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
+    }
+
+    function toSentenceCase(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    }
+
+    function renderCards(text) {
+      const container = document.getElementById("preview-cards");
+      container.innerHTML = "";
+      container.style.display = "block";
+      document.getElementById("select-text-msg").style.display = "none";
+
+      const cases = {
+        title: toTitleCase(text),
+        sentence: toSentenceCase(text),
+        lower: text.toLowerCase(),
+        upper: text.toUpperCase()
+      };
+
+      const currentCase = Object.entries(cases).find(([, val]) => val === text)?.[0];
+
+      for (let key in cases) {
+        const card = document.createElement("div");
+        card.className = "card" + (key === currentCase ? " active" : "");
+        card.textContent = cases[key];
+        card.onclick = () => {
+          parent.postMessage({ pluginMessage: { type: "apply-case-to-selected", caseType: key } }, "*");
+        };
+        container.appendChild(card);
+      }
+    }
+
+    function renderBulkList(counts) {
+      const container = document.getElementById("bulk-list");
+      container.innerHTML = "";
+      const cases = ["title", "sentence", "lower", "upper"];
+
+      cases.forEach(from => {
+        const row = document.createElement("div");
+        row.className = "bulk-row";
+        row.innerHTML = `
+          <span>${from.charAt(0).toUpperCase() + from.slice(1)} case (${counts[from]})</span>
+          <select id="select-${from}">
+            <option value="">--Convert to--</option>
+            <option value="title">Title</option>
+            <option value="sentence">Sentence</option>
+            <option value="lower">Lower</option>
+            <option value="upper">Upper</option>
+          </select>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    document.getElementById("bulk-confirm").onclick = () => {
+      const cases = ["title", "sentence", "lower", "upper"];
+      cases.forEach(from => {
+        const to = document.getElementById(`select-${from}`).value;
+        if (to && to !== from) {
+          parent.postMessage({ pluginMessage: { type: "bulk-apply", from, to } }, "*");
+        }
+      });
+    };
+
+    onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg.type === "text-selected") {
+        renderCards(msg.text);
+      }
+      if (msg.type === "text-deselected") {
+        document.getElementById("preview-cards").style.display = "none";
+        document.getElementById("select-text-msg").style.display = "block";
+      }
+      if (msg.type === "bulk-case-counts") {
+        renderBulkList(msg.caseCounts);
+      }
+    };
+  </script>
+</body>
+</html>
