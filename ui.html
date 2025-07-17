@@ -4,23 +4,52 @@
   <meta charset="utf-8">
   <title>Text Case Editor</title>
   <style>
-    body {
-      font-family: sans-serif;
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
-      color: #333;
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #f5f5f5;
+    }
+    #point-edit {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      flex: 1 1 auto;
     }
     .tabs {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      background: #f5f5f5;
+      flex: 0 0 auto;
       font-family: 'Roboto', sans-serif;
       font-weight: 300;
-      display: flex;
-      justify-content: space-between;
       margin-bottom: 12px;
+    }
+    .content {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      background: #f5f5f5;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    * {
+      box-sizing: inherit;
     }
     .tab {
       font-family: 'Roboto', sans-serif;
       font-weight: 300;
       flex: 1;
+      padding-top: 12px;
       padding-bottom: 12px;
       text-align: center;
       cursor: pointer;
@@ -31,20 +60,124 @@
       font-weight: 500;
       border-bottom: 3px solid #3F5EFB;
     }
-    .content {
-      padding: 16px;
+    .modern-placeholder {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #666;
+      padding: 0 8px;
+      box-sizing: border-box;
+    }
+    .modern-placeholder .placeholder-icon,
+    .modern-placeholder h3,
+    .modern-placeholder p {
+      align-self: center;
+      text-align: center;
+    }
+    .placeholder-icon {
+      margin-bottom: 16px;
+      opacity: 0.6;
+      color: #666;
+    }
+    .text-symbols {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .symbol {
+      padding: 4px 8px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .modern-placeholder h3 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: #333;
+    }
+    .modern-placeholder p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.4;
+      opacity: 0.8;
+    }
+    #preview-cards {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: stretch;
+      flex-wrap: nowrap !important;
+      width: 100%;
+      height: 200px;
+      max-height: 200px;
+      box-sizing: border-box;
+      padding: 0;
     }
     .card {
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       padding: 12px;
-      margin: 10px 0;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      min-width: 0;
+      flex: 1;
+      box-sizing: border-box;
+      gap: 8px;
       cursor: pointer;
       border: 2px solid transparent;
+      transition: all 0.2s ease;
+      color: #333;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+    .card-text {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+      margin: 0;
+      word-wrap: break-word;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 6;
+      -webkit-box-orient: vertical;
+      flex: 1;
+      padding-bottom: 8px;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     }
     .card.active {
-      border-color: #4D4DFF;
-      box-shadow: 0 0 0 2px #4D4DFF inset;
+      border-color: #3F5EFB;
+      background: linear-gradient(135deg, #3F5EFB 0%, #4D4DFF 100%);
+      color: white;
+      box-shadow: 0 8px 25px rgba(63, 94, 251, 0.3);
+    }
+    .card.active:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(63, 94, 251, 0.4);
     }
     .bulk-row {
       display: flex;
@@ -63,6 +196,49 @@
       border: none;
       margin-top: 16px;
       width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover {
+      background: #3F5EFB;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .content, .modern-placeholder {
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .modern-placeholder {
+      padding: 0 8px;
+      text-align: center;
+    }
+    #preview-cards {
+      gap: 8px;
+      width: 100%;
+      justify-content: space-between;
+      align-items: stretch;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      height: 200px;
+      max-height: 200px;
+      box-sizing: border-box;
+      padding: 0;
     }
   </style>
 </head>
@@ -73,7 +249,15 @@
   </div>
 
   <div class="content" id="point-edit">
-    <p id="select-text-msg">Select a text</p>
+    <div id="select-text-msg" class="modern-placeholder">
+              <div class="placeholder-icon">
+          <div class="text-symbols">
+            <span class="symbol">Aa</span>
+          </div>
+        </div>
+      <h3>Select a text element</h3>
+      <p>Choose any text layer in your design to see case conversion options</p>
+    </div>
     <div id="preview-cards" style="display:none;"></div>
   </div>
 
@@ -87,6 +271,7 @@
     const bulkTab = document.getElementById("tab-bulk");
     const pointContent = document.getElementById("point-edit");
     const bulkContent = document.getElementById("bulk-edit");
+    let currentText = ""; // Store current text globally
 
     pointTab.onclick = () => switchTab(true);
     bulkTab.onclick = () => switchTab(false);
@@ -109,10 +294,22 @@
       return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
     }
 
-    function renderCards(text) {
+    function renderCards(text, activeCaseType = null) {
+      console.log("renderCards called with text:", text, "activeCaseType:", activeCaseType);
+      currentText = text; // Store the current text globally
       const container = document.getElementById("preview-cards");
+      
+      // Force clear the container
       container.innerHTML = "";
-      container.style.display = "block";
+      console.log("Container cleared, child count:", container.children.length);
+      
+      container.style.display = "flex";
+      container.style.flexDirection = "row";
+      container.style.gap = "8px";
+      container.style.justifyContent = "space-between";
+      container.style.width = "100%";
+      container.style.height = "200px";
+      container.style.maxHeight = "200px";
       document.getElementById("select-text-msg").style.display = "none";
 
       const cases = {
@@ -122,20 +319,80 @@
         upper: text.toUpperCase()
       };
 
-      const currentCase = Object.entries(cases).find(([, val]) => val === text)?.[0];
+      // Determine which case is active
+      let currentCase;
+      if (activeCaseType) {
+        currentCase = activeCaseType;
+      } else {
+        currentCase = Object.entries(cases).find(([, val]) => val === text)?.[0];
+      }
 
       for (let key in cases) {
         const card = document.createElement("div");
         card.className = "card" + (key === currentCase ? " active" : "");
-        card.textContent = cases[key];
+        
+        // Create title element
+        const title = document.createElement("div");
+        title.className = "card-title";
+        title.textContent = key.charAt(0).toUpperCase() + key.slice(1) + " Case";
+        
+        // Create text element
+        const text = document.createElement("div");
+        text.className = "card-text";
+        text.textContent = cases[key];
+        
+        // Add title and text to card
+        card.appendChild(title);
+        card.appendChild(text);
+        
+        card.style.flex = "1";
+        card.style.minWidth = "0";
+        card.style.height = "100%";
+        card.style.maxHeight = "200px";
+        card.style.display = "flex";
+        card.style.flexDirection = "column";
+        card.style.alignItems = "flex-start";
+        card.style.justifyContent = "flex-start";
+        card.style.gap = "8px";
+        
         card.onclick = () => {
+          // Only proceed if we have current text
+          if (!currentText) {
+            console.log("No text selected, ignoring card click");
+            return;
+          }
+          
+          console.log("Card clicked, applying case:", key);
+          console.log("Current text before update:", currentText);
+          
+          // Calculate the new text based on the clicked case
+          const newCases = {
+            title: toTitleCase(currentText),
+            sentence: toSentenceCase(currentText),
+            lower: currentText.toLowerCase(),
+            upper: currentText.toUpperCase()
+          };
+          
+          const newText = newCases[key];
+          console.log("New text calculated:", newText);
+          
+          // Force update currentText to the new text
+          currentText = newText;
+          
+          // Immediately update the UI with the new text and active case
+          renderCards(newText, key);
+          
+          // Send message to plugin
           parent.postMessage({ pluginMessage: { type: "apply-case-to-selected", caseType: key } }, "*");
         };
         container.appendChild(card);
+        console.log("Card created for", key, "with text:", cases[key]);
       }
+      console.log("Total cards created:", container.children.length);
     }
 
     function renderBulkList(counts) {
+      console.log("renderBulkList called with counts:", counts);
       const container = document.getElementById("bulk-list");
       container.innerHTML = "";
       const cases = ["title", "sentence", "lower", "upper"];
@@ -155,29 +412,79 @@
         `;
         container.appendChild(row);
       });
+      console.log("Bulk list rendered with new counts");
     }
 
     document.getElementById("bulk-confirm").onclick = () => {
       const cases = ["title", "sentence", "lower", "upper"];
+      let hasChanges = false;
+      
       cases.forEach(from => {
         const to = document.getElementById(`select-${from}`).value;
         if (to && to !== from) {
           parent.postMessage({ pluginMessage: { type: "bulk-apply", from, to } }, "*");
+          hasChanges = true;
         }
       });
+      
+      // Refresh all dropdowns after confirming
+      cases.forEach(from => {
+        const select = document.getElementById(`select-${from}`);
+        if (select) {
+          select.value = "";
+        }
+      });
+      
+      // If changes were made, request updated counts
+      if (hasChanges) {
+        setTimeout(() => {
+          parent.postMessage({ pluginMessage: { type: "bulk-get-cases" } }, "*");
+        }, 100);
+      }
     };
+
+    function updateActiveCard(activeCaseType) {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        card.classList.remove('active');
+      });
+      
+      // Find the card that matches the active case type
+      const cases = ["title", "sentence", "lower", "upper"];
+      const activeIndex = cases.indexOf(activeCaseType);
+      if (activeIndex !== -1 && cards[activeIndex]) {
+        cards[activeIndex].classList.add('active');
+      }
+    }
 
     onmessage = (event) => {
       const msg = event.data.pluginMessage;
+      console.log("Received message:", msg);
+      
+      if (msg.type === "bulk-case-counts") {
+        console.log("Updating bulk counts with:", msg.caseCounts);
+        renderBulkList(msg.caseCounts);
+      }
+      
       if (msg.type === "text-selected") {
+        console.log("Rendering cards for text:", msg.text);
         renderCards(msg.text);
       }
       if (msg.type === "text-deselected") {
-        document.getElementById("preview-cards").style.display = "none";
-        document.getElementById("select-text-msg").style.display = "block";
+        const previewCards = document.getElementById("preview-cards");
+        previewCards.style.display = "none";
+        previewCards.innerHTML = "";
+        document.getElementById("select-text-msg").style.display = "flex";
+        // Clear the current text when deselected
+        currentText = "";
       }
       if (msg.type === "bulk-case-counts") {
         renderBulkList(msg.caseCounts);
+        console.log("Bulk counts updated:", msg.caseCounts);
+      }
+      if (msg.type === "case-applied") {
+        console.log("Case applied message received (backup)");
+        // This is just a backup - the UI should already be updated
       }
     };
   </script>
